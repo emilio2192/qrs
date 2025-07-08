@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import Button from '../../shared/Button';
 import ProductImageGallery from '../../components/ProductImageGallery';
 import { fetchProduct } from '../../../lib/request';
 import { Product } from '../../../types/api';
+import { useCart } from '@/hooks/useCart';
 
 export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -13,6 +14,10 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const { addItem, getItemByProductId, getItemQuantity } = useCart();
+  
+  // Use useMemo to prevent recalculation on every render
+  const itemStored = useMemo(() => getItemByProductId(params.id), [params.id, getItemByProductId]);
 
   useEffect(() => {
     fetchProduct(params.id).then(setProduct);
@@ -26,7 +31,13 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
   if (!product) return <div className="text-center py-20">{t('common.loading')}</div>;
 
   const thumbnails = product.images || [{ url: '/placeholder.png', alt: 'No image' }];
-  const sizes = (product.sizes || []).map((s) => ({ size: s.size, stock: s.stock }));
+  
+  // Calculate available stock without modifying the original product
+  const sizes = (product.sizes || []).map((s) => ({ 
+    size: s.size, 
+    stock: Math.max(0, s.stock - getItemQuantity(product.id, s.size))
+  }));
+  
   const selectedStock = selectedSize ? (sizes.find(s => s.size === selectedSize)?.stock ?? 0) : 0;
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
@@ -104,7 +115,19 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
           </div>
         </div>
         {/* Add to Cart Button */}
-        <Button label={t('product.addToCart')} className="w-full mt-4" disabled={!selectedSize || selectedStock === 0} />
+        <Button 
+          label={t('product.addToCart')} 
+          className="w-full mt-4" 
+          disabled={!selectedSize || selectedStock === 0} 
+          onClick={() => {
+            if (selectedSize) {
+              addItem(product.id, quantity, selectedSize);
+              // Reset quantity and size selection after adding to cart
+              setQuantity(1);
+              setSelectedSize(null);
+            }
+          }}
+        />
       </div>
     </div>
   );

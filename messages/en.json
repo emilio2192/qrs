@@ -30,6 +30,8 @@
     "category": "Category",
     "size": "Size",
     "maxPrice": "Max Price",
-    "upTo": "Up to ${price}"
+    "upTo": "Up to ${price}",
+    "decreaseQuantity": "Decrease Quantity",
+    "increaseQuantity": "Increase Quantity"
   }
 } 
