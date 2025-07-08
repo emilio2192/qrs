@@ -1,21 +1,35 @@
 import './globals.css';
-import { Inter } from 'next/font/google';
+import { Roboto } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import Header from './components/Header';
 
-const inter = Inter({ subsets: ['latin'] });
+const roboto = Roboto({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'QRS',
   description: 'QRS Shopping Cart System',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const messages = await getMessages();
+
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={roboto.className}>
+        <NextIntlClientProvider messages={messages}>
+          <Header cartCount={0} />
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }
