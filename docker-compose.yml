@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: qrs_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: qrs_db
+      POSTGRES_USER: qrs_user
+      POSTGRES_PASSWORD: qrs_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - qrs_network
+
+  nextjs:
+    container_name: qrs_nextjs_dev
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+    command: sh -c "apk add --no-cache openssl && npm install && npm run dev"
+    depends_on:
+      - postgres
+    networks:
+      - qrs_network
+
+volumes:
+  postgres_data:
+
+networks:
+  qrs_network:
+    driver: bridge 
