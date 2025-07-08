@@ -4,16 +4,35 @@ import { ProductResponse } from '../../../types/api';
 
 const prisma = new PrismaClient();
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
+    const { searchParams } = new URL(request.url);
+    const gender = searchParams.get('gender');
+    const category = searchParams.get('category');
+    const size = searchParams.get('size');
+    const maxPrice = searchParams.get('maxPrice');
+
+    const where: any = { isActive: true };
+    if (gender) where.gender = gender;
+    if (category) where.category = { name: category };
+    if (maxPrice) where.price = { lte: Number(maxPrice) };
+
+    let products = await prisma.product.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         images: true,
+        sizes: true,
       },
-      take: 20, // Limit to 20 newest products
+      take: 20,
     });
+
+    // Filter by size if provided
+    if (size) {
+      products = products.filter(product =>
+        product.sizes.some(s => s.size === size && s.stock > 0)
+      );
+    }
 
     // Convert decimal and date fields for API response, and map null to undefined
     const formattedProducts = products.map((product) => ({
@@ -27,6 +46,11 @@ export async function GET(_request: NextRequest) {
         alt: img.alt || undefined,
         createdAt: img.createdAt.toISOString(),
         updatedAt: img.updatedAt.toISOString(),
+      })),
+      sizes: product.sizes.map((sz) => ({
+        ...sz,
+        createdAt: sz.createdAt.toISOString(),
+        updatedAt: sz.updatedAt.toISOString(),
       })),
     }));
 

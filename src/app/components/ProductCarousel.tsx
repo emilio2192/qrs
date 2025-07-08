@@ -51,7 +51,6 @@ export default function ProductCarousel({ title, apiUrl = '/api/products?sort=ne
   return (
     <section className="my-8">
       <div className="flex items-center justify-between mb-4 px-2">
-        
         <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}

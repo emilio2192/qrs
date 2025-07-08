@@ -1,3 +1,4 @@
+"use client";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -26,9 +27,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block group focus:outline-none">
-      <div className="rounded-xl bg-white shadow-sm overflow-hidden w-48 flex-shrink-0 group-hover:shadow-md transition-shadow cursor-pointer">
-        <div className="relative w-full h-56 bg-gray-100">
+    <Link href={`/product/${product.id}`} className="block group focus:outline-none h-full w-full">
+      <div className="rounded-xl bg-white shadow-sm overflow-hidden w-full h-full flex flex-col group-hover:shadow-md transition-shadow cursor-pointer">
+        <div className="relative w-full h-56 bg-gray-100 flex-shrink-0">
           <Image
             src={images[imgIndex]}
             alt={product.name}
@@ -43,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
         </div>
-        <div className="p-3">
+        <div className="p-3 flex-1 flex flex-col justify-end">
           <div className="text-sm font-medium text-gray-900 truncate group-hover:underline">{product.name}</div>
           <div className="text-sm text-gray-700 mt-1">${Number(product.price).toLocaleString()}</div>
         </div>
