@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: [formattedProduct] });
     }
 
-    const where: any = { isActive: true };
+    const where: Record<string, unknown> = { isActive: true };
     if (gender) where.gender = gender;
     if (category) where.category = { name: category };
     if (maxPrice) where.price = { lte: Number(maxPrice) };

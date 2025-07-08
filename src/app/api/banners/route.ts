@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '../../../generated/prisma';
 import { BannerResponse } from '../../../types/api';
 
 const prisma = new PrismaClient();
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const banners = await prisma.banner.findMany({
       where: {

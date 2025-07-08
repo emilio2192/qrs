@@ -1,4 +1,4 @@
-import SidebarFilters, { Filters } from '../../components/SidebarFilters';
+import { Filters } from '../../components/SidebarFilters';
 import ProductGrid from '../../components/ProductGrid';
 import { Product } from '../../../types/api';
 import { notFound } from 'next/navigation';
@@ -7,8 +7,8 @@ import { headers } from 'next/headers';
 import FilterSidebarWrapper from '../../components/FilterSidebarWrapper';
 
 interface Props {
-  params: { gender?: string[] };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ gender?: string[] }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const GENDERS = ['female', 'male', 'unisex'];
@@ -24,7 +24,7 @@ function buildQuery(gender: string | undefined, filters: Filters) {
 
 async function fetchProducts(gender: string | undefined, filters: Filters): Promise<Product[]> {
   const url = buildQuery(gender, filters);
-  const host = headers().get('host');
+  const host = (await headers()).get('host');
   const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
   const absoluteUrl = url.startsWith('http') ? url : `${protocol}://${host}${url}`;
   const res = await fetch(absoluteUrl, { cache: 'no-store' });
@@ -32,7 +32,7 @@ async function fetchProducts(gender: string | undefined, filters: Filters): Prom
   return data.success ? data.data : [];
 }
 
-function getFiltersFromSearchParams(searchParams: Props['searchParams']): Filters {
+function getFiltersFromSearchParams(searchParams: { [key: string]: string | string[] | undefined }): Filters {
   return {
     category: typeof searchParams.category === 'string' ? searchParams.category : undefined,
     maxPrice: typeof searchParams.maxPrice === 'string' ? Number(searchParams.maxPrice) : undefined,
@@ -40,12 +40,14 @@ function getFiltersFromSearchParams(searchParams: Props['searchParams']): Filter
   };
 }
 
-export default async function ShopGenderPage({ params, searchParams }: Props) {
+export default async function ShopGenderPage(props: Props) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   // params.gender is an array or undefined
   const genderParam = params.gender && params.gender.length > 0 ? params.gender[0] : undefined;
   // If no gender param (i.e., /shop), treat as 'all'.
   if (genderParam && !GENDERS.includes(genderParam) && genderParam !== 'all') notFound();
-  const filters = getFiltersFromSearchParams(searchParams);
+  const filters = getFiltersFromSearchParams(await searchParams);
   const products = await fetchProducts(genderParam === 'all' ? undefined : genderParam, filters);
 
   return (

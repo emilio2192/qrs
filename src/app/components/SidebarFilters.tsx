@@ -1,6 +1,7 @@
 "use client";
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import debounce from 'lodash.debounce';
 
 export interface Filters {
   category?: string;
@@ -20,12 +21,36 @@ export default function SidebarFilters({ filters, onChange }: SidebarFiltersProp
   const t = useTranslations();
   const [open, setOpen] = useState(false);
 
+  // Local state for slider value
+  const [localMaxPrice, setLocalMaxPrice] = useState(filters.maxPrice || 200);
+
+  // Sync local state if filters.maxPrice changes externally
+  useEffect(() => {
+    setLocalMaxPrice(filters.maxPrice || 200);
+  }, [filters.maxPrice]);
+
+  // Debounced onChange for price
+  const debouncedPriceChange = useMemo(
+    () => debounce((value: number) => {
+      onChange({ ...filters, maxPrice: value });
+    }, 300),
+    [onChange, filters]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedPriceChange.cancel();
+    };
+  }, [debouncedPriceChange]);
+
   // Handle filter changes
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({ ...filters, category: e.target.value });
   };
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...filters, maxPrice: Number(e.target.value) });
+    const value = Number(e.target.value);
+    setLocalMaxPrice(value); // update UI immediately
+    debouncedPriceChange(value); // debounce the filter logic
   };
   const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({ ...filters, size: e.target.value });
@@ -37,6 +62,7 @@ export default function SidebarFilters({ filters, onChange }: SidebarFiltersProp
       <div className="md:hidden flex justify-between items-center mb-2">
         <span className="font-semibold text-lg">{t('common.filters')}</span>
         <button
+          type="button"
           className="px-3 py-1 border rounded text-sm"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
@@ -72,8 +98,8 @@ export default function SidebarFilters({ filters, onChange }: SidebarFiltersProp
         {/* Price filter */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">{t('product.maxPrice')}</label>
-          <input type="range" min="0" max="200" value={filters.maxPrice || 200} onChange={handlePriceChange} className="w-full" />
-          <div className="text-xs text-gray-600 mt-1">{t('product.upTo', { price: filters.maxPrice || 200 })}</div>
+          <input type="range" min="0" max="200" value={localMaxPrice} onChange={handlePriceChange} className="w-full" />
+          <div className="text-xs text-gray-600 mt-1">{t('product.upTo', { price: localMaxPrice })}</div>
         </div>
         {/* Add more filters as needed */}
       </div>

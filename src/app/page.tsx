@@ -19,7 +19,7 @@ export default function Home() {
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
          {t('product.newArrivals')}
         </h2>
-        <ProductCarousel title="New Arrivals" />
+        <ProductCarousel />
       </div>
     </div>
   );

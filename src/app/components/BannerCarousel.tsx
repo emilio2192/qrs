@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { Banner as BannerType, BannerResponse } from '../../types/api';
+import { Banner as BannerType } from '../../types/api';
 import Banner from './Banner';
 import { useTranslations } from 'next-intl';
 import { fetchBanners } from '../../lib/request';
@@ -24,26 +24,21 @@ export default function BannerCarousel({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch banners on component mount
+  const loadBanners = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const banners = await fetchBanners();
+      setBanners(banners);
+    } catch (err) {
+      setError('Failed to load banners');
+      console.error('Error loading banners:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // initial load
   useEffect(() => {
-    const loadBanners = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetchBanners();
-        
-        if (response.success) {
-          setBanners(response.data);
-        } else {
-          setError(response.error || 'Failed to load banners');
-        }
-      } catch (err) {
-        setError('Failed to load banners');
-        console.error('Error loading banners:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadBanners();
   }, []);
 
@@ -81,7 +76,7 @@ export default function BannerCarousel({
     return (
       <div className="w-full h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" role="status"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
@@ -117,7 +112,7 @@ export default function BannerCarousel({
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" role="banner">
       {/* Banner Display */}
       <div className="relative overflow-hidden">
         <Banner banner={banners[currentIndex]} />

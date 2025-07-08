@@ -18,7 +18,6 @@ export default function ProductCarousel({ apiUrl = '/api/products?sort=newest' }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -32,12 +31,13 @@ export default function ProductCarousel({ apiUrl = '/api/products?sort=newest' }
         }
         const products = await fetchProductsApi(params);
         setProducts(products);
-      } catch (err) {
+      } catch {
         setError('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [apiUrl]);
 
@@ -73,7 +73,7 @@ export default function ProductCarousel({ apiUrl = '/api/products?sort=newest' }
       </div>
       {loading ? (
         <div className="h-64 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900" role="status"></div>
         </div>
       ) : error ? (
         <div className="h-64 flex items-center justify-center text-red-600">{t('common.error')}</div>
@@ -84,10 +84,13 @@ export default function ProductCarousel({ apiUrl = '/api/products?sort=newest' }
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto scrollbar-hide px-2 pb-4"
           style={{ scrollBehavior: 'smooth' }}
+          data-testid="carousel-scroll"
         >
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {
+            // TODO: remove duplicate images, only for testing purposes
+            products.map((product, index) => (
+              <ProductCard key={`${product.id}-${index}`} product={product} />
+            ))}
         </div>
       )}
     </section>

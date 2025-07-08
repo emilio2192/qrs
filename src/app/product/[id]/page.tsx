@@ -1,13 +1,15 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useTranslations } from 'next-intl';
 import Button from '../../shared/Button';
 import ProductImageGallery from '../../components/ProductImageGallery';
-import { fetchProduct } from '../../lib/request';
+import { fetchProduct } from '../../../lib/request';
+import { Product } from '../../../types/api';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const t = useTranslations();
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -24,7 +26,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   if (!product) return <div className="text-center py-20">{t('common.loading')}</div>;
 
   const thumbnails = product.images || [{ url: '/placeholder.png', alt: 'No image' }];
-  const sizes = (product.sizes || []).map((s: { size: string; stock: number }) => ({ size: s.size, stock: s.stock }));
+  const sizes = (product.sizes || []).map((s) => ({ size: s.size, stock: s.stock }));
   const selectedStock = selectedSize ? (sizes.find(s => s.size === selectedSize)?.stock ?? 0) : 0;
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
@@ -53,7 +55,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             {sizes.length === 0 ? (
               <span className="text-gray-500 text-sm">{t('product.noSizes')}</span>
             ) : (
-              sizes.map(({ size, stock }: { size: string; stock: number }) => (
+              sizes.map(({ size, stock }) => (
                 <button
                   key={size}
                   type="button"
