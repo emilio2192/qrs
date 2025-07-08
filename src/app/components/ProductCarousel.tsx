@@ -5,37 +5,40 @@ import { Product } from '../../types/api';
 import ProductCard from './ProductCard';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { useTranslations } from 'next-intl';
+import { fetchProducts as fetchProductsApi } from '../../lib/request';
 
 interface ProductCarouselProps {
-  title: string;
   apiUrl?: string;
 }
 
-export default function ProductCarousel({ title, apiUrl = '/api/products?sort=newest' }: ProductCarouselProps) {
+export default function ProductCarousel({ apiUrl = '/api/products?sort=newest' }: ProductCarouselProps) {
+  const t = useTranslations();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        if (data.success) {
-          setProducts(data.data);
-        } else {
-          setError(data.error || 'Failed to load products');
+        // Parse params from apiUrl if present
+        let params: Record<string, string> = {};
+        if (apiUrl && apiUrl.includes('?')) {
+          const search = apiUrl.split('?')[1];
+          params = Object.fromEntries(new URLSearchParams(search));
         }
+        const products = await fetchProductsApi(params);
+        setProducts(products);
       } catch (err) {
         setError('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, [apiUrl]);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -73,9 +76,9 @@ export default function ProductCarousel({ title, apiUrl = '/api/products?sort=ne
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
         </div>
       ) : error ? (
-        <div className="h-64 flex items-center justify-center text-red-600">{error}</div>
+        <div className="h-64 flex items-center justify-center text-red-600">{t('common.error')}</div>
       ) : products.length === 0 ? (
-        <div className="h-64 flex items-center justify-center text-gray-600">No products found.</div>
+        <div className="h-64 flex items-center justify-center text-gray-600">{t('common.noProducts')}</div>
       ) : (
         <div
           ref={scrollRef}

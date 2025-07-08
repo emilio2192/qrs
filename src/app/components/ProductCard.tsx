@@ -3,12 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Product } from '../../types/api';
+import { useTranslations } from 'next-intl';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const t = useTranslations();
   const images = product.images && product.images.length > 0
     ? product.images.map(img => img.url)
     : ['/placeholder.png'];
@@ -40,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
           {isLastImage && isPlaceholder && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-80">
-              <span className="text-gray-500 font-semibold text-sm">Not available</span>
+              <span className="text-gray-500 font-semibold text-sm">{t('product.notAvailable')}</span>
             </div>
           )}
         </div>

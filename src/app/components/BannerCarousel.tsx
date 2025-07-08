@@ -5,31 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { Banner as BannerType, BannerResponse } from '../../types/api';
 import Banner from './Banner';
-
-async function fetchBanners(): Promise<BannerResponse> {
-  try {
-    const response = await fetch('/api/banners', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching banners:', error);
-    return {
-      success: false,
-      data: [],
-      error: 'Failed to fetch banners',
-    };
-  }
-}
+import { useTranslations } from 'next-intl';
+import { fetchBanners } from '../../lib/request';
 
 interface BannerCarouselProps {
   autoPlay?: boolean;
@@ -40,6 +17,7 @@ export default function BannerCarousel({
   autoPlay = true, 
   interval = 5000 
 }: BannerCarouselProps) {
+  const t = useTranslations();
   const [banners, setBanners] = useState<BannerType[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -104,7 +82,7 @@ export default function BannerCarousel({
       <div className="w-full h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading banners...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -115,12 +93,12 @@ export default function BannerCarousel({
     return (
       <div className="w-full h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
+          <p className="text-red-600 mb-4">{t('common.error')}</p>
           <button 
             onClick={() => window.location.reload()}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -132,7 +110,7 @@ export default function BannerCarousel({
     return (
       <div className="w-full h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">No banners available</p>
+          <p className="text-gray-600">{t('common.noBanners')}</p>
         </div>
       </div>
     );

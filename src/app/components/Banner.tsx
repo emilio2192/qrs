@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Banner as BannerType } from '../../types/api';
 
 interface BannerProps {
