@@ -86,13 +86,17 @@ After seeding, you can test with these users:
 qrs/
 ├── src/
 │   ├── app/           # Next.js App Router
-│   │   └── api/       # API routes
-│   │       └── auth/  # Authentication routes
+│   │   ├── api/       # API routes
+│   │   │   └── auth/  # Authentication routes
+│   │   ├── cart/      # Cart page
+│   │   ├── checkout/  # Checkout page
+│   │   └── profile/   # User profile page
 │   ├── components/    # Reusable UI components
 │   ├── lib/          # Business logic and utilities
 │   │   ├── prisma.ts # Prisma client instance
-│   │   └── auth.ts   # Authentication utilities
-│   └── context/      # React Context providers
+│   │   ├── store.ts  # Redux store configuration
+│   │   └── services/ # Business logic services
+│   └── hooks/        # Custom React hooks
 ├── prisma/           # Prisma configuration
 │   ├── schema.prisma # Database schema
 │   └── seed.ts       # Database seeding
@@ -292,45 +296,91 @@ function MyComponent() {
 
 ## 🛒 Cart Architecture: Redux + Cookies (SSR Compatible)
 
-This project uses **Redux** (with [next-redux-wrapper](https://github.com/kirill-konshin/next-redux-wrapper)) and **cookies** to manage the shopping cart, ensuring full SSR (Server-Side Rendering) compatibility and persistence across sessions.
+This project uses **Redux Toolkit** with **cookies** to manage the shopping cart, ensuring full SSR (Server-Side Rendering) compatibility and persistence across sessions.
 
 ### How It Works
-- **Redux** manages the cart state globally across your app.
-- **Cart state is persisted in cookies** (`qrs_cart`) so it survives page reloads, browser restarts, and is available for SSR.
-- On the server, the cart can be hydrated from cookies for SSR pages.
-- On the client, the cart is kept in sync with cookies automatically.
+- **Redux Toolkit** manages the cart state globally across your app
+- **Cart state is persisted in cookies** (`qrs_cart`) so it survives page reloads, browser restarts, and is available for SSR
+- **Redux Provider** is configured for Next.js App Router compatibility
+- **Cart actions** include add, update, remove, and clear operations
+- **Automatic cookie sync** - cart state is automatically saved to cookies on every change
 
 ### Why This Approach?
-- **SSR/SEO:** Cart contents are available on first render, even for bots/crawlers.
-- **Persistence:** Cart survives browser restarts and is available across tabs.
-- **Scalability:** Easy to extend for authenticated users (e.g., sync with database).
+- **SSR/SEO:** Cart contents are available on first render, even for bots/crawlers
+- **Persistence:** Cart survives browser restarts and is available across tabs
+- **Type Safety:** Full TypeScript support with Redux Toolkit
+- **Developer Experience:** Redux DevTools support for debugging
+- **Scalability:** Easy to extend for authenticated users (e.g., sync with database)
 
 ### Usage in Components
 - Use `useSelector` from `react-redux` to access cart state:
-  ```ts
+  ```typescript
   import { useSelector } from 'react-redux';
   import { AppState } from '@/lib/store';
+  
   const cartItems = useSelector((state: AppState) => state.cart.items);
+  const cartItemCount = useSelector((state: AppState) => 
+    state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
+  );
   ```
+
 - Use `useDispatch` to add, update, or remove items:
-  ```ts
+  ```typescript
   import { useDispatch } from 'react-redux';
   import { addItem, updateItemQuantity, removeItem, clearCart } from '@/lib/store';
+  
   const dispatch = useDispatch();
-  dispatch(addItem({ ... }));
+  
+  // Add item to cart
+  dispatch(addItem({ 
+    productId: 'product-id', 
+    size: 'M', 
+    quantity: 1 
+  }));
+  
+  // Update quantity
+  dispatch(updateItemQuantity({ 
+    productId: 'product-id', 
+    size: 'M', 
+    quantity: 2 
+  }));
+  
+  // Remove item
+  dispatch(removeItem({ 
+    productId: 'product-id', 
+    size: 'M' 
+  }));
+  
+  // Clear entire cart
+  dispatch(clearCart());
   ```
 
+### Redux Store Structure
+```typescript
+interface CartState {
+  items: CartItem[];
+}
+
+interface CartItem {
+  productId: string;
+  size: string;
+  quantity: number;
+}
+```
+
 ### SSR and Hydration
-- The cart is available on both server and client thanks to cookies and next-redux-wrapper.
-- No need for localStorage/sessionStorage hacks.
+- The cart is available on both server and client thanks to cookies
+- **Client-side only rendering** prevents hydration mismatches
+- Cart state is properly synchronized between server and client
 
 ### Testing
-- Tests use a Redux provider and can dispatch cart actions directly.
-- See `src/test/utils/renderWithIntl.tsx` for the test setup.
+- Tests use a Redux provider and can dispatch cart actions directly
+- See `src/test/utils/renderWithIntl.tsx` for the test setup
 
 ### Migration Notes
-- The old cart context/sessionStorage logic has been fully replaced.
-- All cart operations are now Redux actions/selectors.
+- The old sessionStorage-based cart system has been completely removed
+- All cart operations are now Redux actions/selectors
+- Cart state is automatically persisted in cookies
 
 ---
 
@@ -420,18 +470,19 @@ To reset the database (wipe all data and start fresh):
 
 This project is built with a focus on simplicity, maintainability, and a good user experience. Here are the main points about how it is structured and why:
 
-- **Next.js**: The app uses Next.js for both frontend and backend. Pages are server-rendered for better SEO and fast loading. API routes are used for backend logic (like checkout and authentication).
+- **Next.js App Router**: The app uses Next.js 13+ App Router for both frontend and backend. Pages are server-rendered for better SEO and fast loading. API routes are used for backend logic (like checkout and authentication).
 
 - **Prisma ORM**: Prisma is used to talk to the PostgreSQL database. It makes database queries easy and safe, and helps keep the code clean.
 
-- **PostgreSQL with Docker**: The database runs in a Docker container. This makes it easy to set up and reset the database for development. You don’t need to install Postgres on your computer.
+- **PostgreSQL with Docker**: The database runs in a Docker container. This makes it easy to set up and reset the database for development. You don't need to install Postgres on your computer.
 
-- **Cart Logic**: The cart is stored in the browser’s sessionStorage, so it stays even if you refresh the page. The cart logic is in a custom React hook, making it easy to use in any component.
+- **Redux Toolkit**: The cart is managed with Redux Toolkit for global state management. Cart state is persisted in cookies for SSR compatibility and cross-session persistence. This provides a better user experience than sessionStorage.
 
 - **Promotion Logic**: All discount and promotion calculations are done in a single utility function. This makes it easy to test and update the rules. The logic always tries to give the customer the best deal, and VIP users can choose which discount to use.
 
 - **Authentication**: JWT tokens are used for login. User info and tokens are stored in localStorage. The app supports both common and VIP users.
   - JWT tokens expire in 24 hours for security.
+
 - **Order History**: Orders are saved in the database with the promotion used and the final price. The order history page shows all details, including the discount applied.
 
 - **Testing**: The promotion logic is covered by unit tests to make sure all scenarios work as expected.
@@ -439,13 +490,10 @@ This project is built with a focus on simplicity, maintainability, and a good us
 - **Why these choices?**
   - Next.js and Prisma are popular, well-supported, and easy to use.
   - Docker makes development setup simple for everyone.
+  - Redux Toolkit provides excellent TypeScript support and developer experience.
   - Keeping business logic (like promotions) in one place makes the app easier to maintain and test.
-
 
 ## Improvements (Planned or Possible)
 
-- **Abandoned Cart Sync**: The database already supports tracking abandoned carts. A future improvement is to implement hybrid cart logic: when a user logs in or out, the cart in sessionStorage will be synced with the database. This way, users can keep their cart across devices or after logging in.
-- More advanced admin features, order status tracking, and better error handling can be added as needed.
-
-### Coming Soon vercel deployment 
-https://qrs-chi.vercel.app/ 
+- **Hybrid Cart Sync**: The database already supports tracking abandoned carts. A future improvement is to implement hybrid cart logic: when a user logs in or out, the cart in Redux will be synced with the database. This way, users can keep their cart across devices or after logging in.
+- More advanced admin features, order status tracking, and better error handling can be added as needed. 
