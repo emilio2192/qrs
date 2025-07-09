@@ -50,7 +50,7 @@ export function useAuthToken() {
       if (userData) {
         try {
           return JSON.parse(userData);
-        } catch (error) {
+        } catch {
           return null;
         }
       }

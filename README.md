@@ -397,9 +397,11 @@ This project is built with a focus on simplicity, maintainability, and a good us
   - Docker makes development setup simple for everyone.
   - Keeping business logic (like promotions) in one place makes the app easier to maintain and test.
 
-If you have a B2+ English level, you should find the code and structure easy to follow. The code is organized by feature, and most logic is in reusable hooks or utility files.
 
 ## Improvements (Planned or Possible)
 
 - **Abandoned Cart Sync**: The database already supports tracking abandoned carts. A future improvement is to implement hybrid cart logic: when a user logs in or out, the cart in sessionStorage will be synced with the database. This way, users can keep their cart across devices or after logging in.
 - More advanced admin features, order status tracking, and better error handling can be added as needed.
+
+### Coming Soon vercel deployment 
+https://qrs-chi.vercel.app/ 

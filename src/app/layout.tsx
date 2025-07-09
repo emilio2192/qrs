@@ -26,7 +26,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={roboto.className}>
         <NextIntlClientProvider messages={messages}>
-          <Header cartCount={0} />
+          <Header />
           {children}
         </NextIntlClientProvider>
       </body>

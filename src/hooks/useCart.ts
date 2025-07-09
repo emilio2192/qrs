@@ -40,7 +40,7 @@ class CartManager {
           this.items = JSON.parse(stored);
         }
       }
-    } catch (error) {
+    } catch {
       this.items = [];
     }
   }
@@ -50,7 +50,8 @@ class CartManager {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.items));
       }
-    } catch (error) {
+    } catch {
+      // Silent fail - cart will be empty on next load
     }
   }
 
