@@ -290,6 +290,50 @@ function MyComponent() {
 - **Token Verification**: Comprehensive JWT validation including expiration and user status checks
 - **Auto-cleanup**: Invalid/expired tokens are automatically removed from storage
 
+## 🛒 Cart Architecture: Redux + Cookies (SSR Compatible)
+
+This project uses **Redux** (with [next-redux-wrapper](https://github.com/kirill-konshin/next-redux-wrapper)) and **cookies** to manage the shopping cart, ensuring full SSR (Server-Side Rendering) compatibility and persistence across sessions.
+
+### How It Works
+- **Redux** manages the cart state globally across your app.
+- **Cart state is persisted in cookies** (`qrs_cart`) so it survives page reloads, browser restarts, and is available for SSR.
+- On the server, the cart can be hydrated from cookies for SSR pages.
+- On the client, the cart is kept in sync with cookies automatically.
+
+### Why This Approach?
+- **SSR/SEO:** Cart contents are available on first render, even for bots/crawlers.
+- **Persistence:** Cart survives browser restarts and is available across tabs.
+- **Scalability:** Easy to extend for authenticated users (e.g., sync with database).
+
+### Usage in Components
+- Use `useSelector` from `react-redux` to access cart state:
+  ```ts
+  import { useSelector } from 'react-redux';
+  import { AppState } from '@/lib/store';
+  const cartItems = useSelector((state: AppState) => state.cart.items);
+  ```
+- Use `useDispatch` to add, update, or remove items:
+  ```ts
+  import { useDispatch } from 'react-redux';
+  import { addItem, updateItemQuantity, removeItem, clearCart } from '@/lib/store';
+  const dispatch = useDispatch();
+  dispatch(addItem({ ... }));
+  ```
+
+### SSR and Hydration
+- The cart is available on both server and client thanks to cookies and next-redux-wrapper.
+- No need for localStorage/sessionStorage hacks.
+
+### Testing
+- Tests use a Redux provider and can dispatch cart actions directly.
+- See `src/test/utils/renderWithIntl.tsx` for the test setup.
+
+### Migration Notes
+- The old cart context/sessionStorage logic has been fully replaced.
+- All cart operations are now Redux actions/selectors.
+
+---
+
 ## 🚀 Deployment
 
 The application is deployed to Vercel for production. **No Dockerfile is needed for production or development.**

@@ -3,6 +3,8 @@ import { Roboto } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Header from './components/Header';
+import { ReactNode } from 'react';
+import ReduxProvider from './ReduxProvider';
 
 const roboto = Roboto({ 
   subsets: ['latin'],
@@ -18,17 +20,18 @@ export const metadata = {
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const messages = await getMessages();
-
   return (
     <html lang="en">
       <body className={roboto.className}>
-        <NextIntlClientProvider messages={messages}>
-          <Header />
-          {children}
-        </NextIntlClientProvider>
+        <ReduxProvider>
+          <NextIntlClientProvider messages={messages}>
+            <Header />
+            {children}
+          </NextIntlClientProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

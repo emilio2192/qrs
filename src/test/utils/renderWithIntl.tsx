@@ -2,6 +2,10 @@ import { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { render, RenderOptions } from '@testing-library/react';
 import messages from '../../../messages/en.json';
+import { Provider } from 'react-redux';
+import { makeStore } from '../../lib/store';
+
+const store = makeStore();
 
 type WrapperProps = {
   children: ReactNode;
@@ -11,9 +15,11 @@ type WrapperProps = {
 
 function Wrapper({ children, locale = 'en', messages: customMessages }: WrapperProps) {
   return (
-    <NextIntlClientProvider locale={locale} messages={customMessages || messages}>
-      {children}
-    </NextIntlClientProvider>
+    <Provider store={store}>
+      <NextIntlClientProvider locale={locale} messages={customMessages || messages}>
+        {children}
+      </NextIntlClientProvider>
+    </Provider>
   );
 }
 

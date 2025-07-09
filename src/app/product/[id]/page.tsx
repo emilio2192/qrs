@@ -5,7 +5,9 @@ import Button from '../../shared/Button';
 import ProductImageGallery from '../../components/ProductImageGallery';
 import { fetchProduct } from '../../../lib/request';
 import { Product } from '../../../types/api';
-import { useCart } from '@/hooks/useCart';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem as addCartItem } from '@/lib/store';
+import { AppState } from '@/lib/store';
 
 export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -14,9 +16,8 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const { addItem, getItemQuantity } = useCart();
-  
-  // Note: getItemByProductId is available for potential future features
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state: AppState) => state.cart.items);
 
   useEffect(() => {
     fetchProduct(params.id).then(setProduct);
@@ -30,13 +31,17 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
   if (!product) return <div className="text-center py-20">{t('common.loading')}</div>;
 
   const thumbnails = product.images || [{ url: '/placeholder.png', alt: 'No image' }];
-  
+
   // Calculate available stock without modifying the original product
+  const getItemQuantity = (productId: string, size: string) => {
+    const item = cartItems.find((i: { productId: string; size: string; quantity: number }) => i.productId === productId && i.size === size);
+    return item ? item.quantity : 0;
+  };
   const sizes = (product.sizes || []).map((s) => ({ 
     size: s.size, 
     stock: Math.max(0, s.stock - getItemQuantity(product.id, s.size))
   }));
-  
+
   const selectedStock = selectedSize ? (sizes.find(s => s.size === selectedSize)?.stock ?? 0) : 0;
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
@@ -120,8 +125,18 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
           disabled={!selectedSize || selectedStock === 0} 
           onClick={() => {
             if (selectedSize) {
-              addItem(product.id, quantity, selectedSize);
-              // Reset quantity and size selection after adding to cart
+              dispatch(addCartItem({
+                productId: product.id,
+                size: selectedSize,
+                quantity,
+                id: '', // id will be generated on backend
+                cartId: '',
+                unitPrice: Number(product.price),
+                totalPrice: Number(product.price) * quantity,
+                createdAt: '',
+                updatedAt: '',
+                product,
+              }));
               setQuantity(1);
               setSelectedSize(null);
             }

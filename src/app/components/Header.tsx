@@ -5,15 +5,15 @@ import { faShoppingBag, faSearch, faBars, faUser } from '@fortawesome/free-solid
 import { useTranslations } from 'next-intl';
 import Button from '../shared/Button';
 import { usePathname } from 'next/navigation';
-import { useCart } from '@/hooks/useCart';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { AppState } from '@/lib/store';
 import MobileMenu from './MobileMenu';
 
 export default function Header() {
   const t = useTranslations();
   const pathname = usePathname();
-  const { getTotalItems } = useCart();
-  const cartItemCount = getTotalItems();
+  const cartItemCount = useSelector((state: AppState) => state.cart.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0));
   const [isClient, setIsClient] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

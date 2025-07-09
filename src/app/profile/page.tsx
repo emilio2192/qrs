@@ -8,9 +8,7 @@ import { getOrderHistory } from '@/lib/request';
 
 export default function ProfilePage() {
   const { getToken, removeToken, getUser } = useAuthToken();
-  const token = getToken();
-  const user = getUser(); // Call once per render
-  const userId = user?.id;
+  const [isClient, setIsClient] = useState(false);
   const [tab, setTab] = useState<'profile' | 'orders'>('profile');
   const [orders, setOrders] = useState<{
     id: string;
@@ -28,11 +26,18 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Prevent hydration mismatch by only rendering after client-side mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Only get auth data after client-side mount
+  const token = isClient ? getToken() : null;
+  const user = isClient ? getUser() : null;
+  const userId = user?.id;
+
   function handleLogout() {
     removeToken();
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('qrs_cart');
-    }
     window.location.reload();
   }
 
@@ -52,7 +57,19 @@ export default function ProfilePage() {
       }
     }
     fetchOrders();
-  }, [tab, userId]); // Only depend on tab and userId
+  }, [tab, userId]);
+
+  // Show loading state during hydration
+  if (!isClient) {
+    return (
+      <div className="max-w-2xl mx-auto py-20 px-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-8"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!token) {
     return (

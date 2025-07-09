@@ -3,23 +3,57 @@
 import { useEffect, useState } from 'react';
 import { useAuthToken } from '@/hooks/useAuthToken';
 
+type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  userType: 'COMMON' | 'VIP';
+  isActive: boolean;
+  createdAt?: string;
+};
+
 export default function UserInfo() {
   const { getUser, validateToken, isValidating } = useAuthToken();
-  const [user, setUser] = useState(getUser());
+  const [isClient, setIsClient] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isValid, setIsValid] = useState(false);
 
+  // Prevent hydration mismatch by only rendering after client-side mount
   useEffect(() => {
+    setIsClient(true);
+    setUser(getUser() as AuthUser | null);
+  }, [getUser]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    
     // Validate token and get fresh user data
     const checkAuth = async () => {
       const result = await validateToken();
       setIsValid(result.isValid);
       if (result.isValid && result.user) {
-        setUser(result.user);
+        setUser(result.user as AuthUser);
       }
     };
 
     checkAuth();
-  }, [validateToken]);
+  }, [validateToken, isClient]);
+
+  // Show loading state during hydration
+  if (!isClient) {
+    return (
+      <div className="p-4 border rounded bg-white">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
