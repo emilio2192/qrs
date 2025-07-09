@@ -39,7 +39,7 @@ A Next.js application with shopping cart functionality, promotional campaigns, a
    ```
 
 6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3001](http://localhost:3001) (Docker) or [http://localhost:3000](http://localhost:3000) (local dev)
 
 ## 🛠️ Available Scripts
 
@@ -63,7 +63,7 @@ A Next.js application with shopping cart functionality, promotional campaigns, a
 The application uses PostgreSQL with Prisma:
 
 - **Host:** localhost
-- **Port:** 5432
+- **Port:** 5433
 - **Database:** qrs_db
 - **Username:** qrs_user
 - **Password:** qrs_password
@@ -132,13 +132,13 @@ Create a `.env.local` file in the root directory (or use `.env.example` as a tem
 
 ```env
 # Database
-DATABASE_URL="postgresql://qrs_user:qrs_password@localhost:5432/qrs_db"
+DATABASE_URL="postgresql://qrs_user:qrs_password@localhost:5433/qrs_db"
 
 # Authentication
 JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 
 # Next.js
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3001
 
 # Node Environment
 NODE_ENV=development
@@ -286,6 +286,53 @@ function MyComponent() {
 }
 ```
 
+### API Authentication
+
+The following APIs require JWT token authentication:
+
+#### Checkout API
+```bash
+POST /api/checkout
+Authorization: Bearer <your-jwt-token>
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "id": "product-id",
+      "quantity": 2,
+      "size": "M",
+      "unitPrice": 29.99
+    }
+  ],
+  "appliedPromotion": "3_FOR_2",
+  "totalPrice": 59.98
+}
+```
+
+#### Order History API
+```bash
+GET /api/orders
+Authorization: Bearer <your-jwt-token>
+```
+
+**Response:**
+```json
+{
+  "orders": [
+    {
+      "id": "cart-id",
+      "userId": "user-id",
+      "totalPrice": 59.98,
+      "appliedPromotion": "3_FOR_2",
+      "status": "ACTIVE",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "items": [...]
+    }
+  ]
+}
+```
+
 ### Security Features
 - **Password Hashing**: bcrypt with 12 salt rounds
 - **JWT Expiration**: 24-hour token expiration
@@ -293,6 +340,7 @@ function MyComponent() {
 - **Error Handling**: Generic error messages to prevent information leakage
 - **Token Verification**: Comprehensive JWT validation including expiration and user status checks
 - **Auto-cleanup**: Invalid/expired tokens are automatically removed from storage
+- **Token-based Authentication**: All protected APIs use JWT tokens instead of user IDs for enhanced security
 
 ## 🛒 Cart Architecture: Redux + Cookies (SSR Compatible)
 
@@ -392,6 +440,8 @@ The application is deployed to Vercel for production. **No Dockerfile is needed 
 - The `nextjs` service in `docker-compose.yml` uses the official `node:18-alpine` image.
 - Your code is mounted as a volume, and the container runs `npm install` and `npm run dev` for hot-reload.
 - This setup is for local development only.
+- **Access the Docker version at:** [http://localhost:3001](http://localhost:3001)
+- **Access the local dev version at:** [http://localhost:3000](http://localhost:3000) (when running `npm run dev`)
 
 ## 📄 License
 
@@ -496,4 +546,4 @@ This project is built with a focus on simplicity, maintainability, and a good us
 ## Improvements (Planned or Possible)
 
 - **Hybrid Cart Sync**: The database already supports tracking abandoned carts. A future improvement is to implement hybrid cart logic: when a user logs in or out, the cart in Redux will be synced with the database. This way, users can keep their cart across devices or after logging in.
-- More advanced admin features, order status tracking, and better error handling can be added as needed. 
+- More advanced admin features, order status tracking, and better error handling can be added as needed.

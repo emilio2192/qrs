@@ -43,11 +43,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function fetchOrders() {
-      if (tab === 'orders' && userId) {
+      if (tab === 'orders' && token) {
         setLoading(true);
         setError('');
         try {
-          const data = await getOrderHistory(userId);
+          const data = await getOrderHistory(token);
           setOrders(data);
         } catch (err: unknown) {
           setError(err instanceof Error ? err.message : 'Failed to load order history.');
@@ -57,7 +57,7 @@ export default function ProfilePage() {
       }
     }
     fetchOrders();
-  }, [tab, userId]);
+  }, [tab, token]);
 
   // Show loading state during hydration
   if (!isClient) {

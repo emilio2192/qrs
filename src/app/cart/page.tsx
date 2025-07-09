@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fetchProduct } from '../../lib/request';
 import { Product } from '../../types/api';
 import { useSelector, useDispatch } from 'react-redux';
-import { AppState, updateItemQuantity, removeItem, clearCart } from '@/lib/store';
+import { AppState, updateItemQuantity, removeItem, clearCart, ReduxCartItem } from '@/lib/store';
 
 export default function CartPage() {
   const cartItems = useSelector((state: AppState) => state.cart.items);
@@ -23,7 +23,7 @@ export default function CartPage() {
   // Fetch product details for all items in the cart
   useEffect(() => {
     async function fetchAllProducts() {
-      const uniqueIds = Array.from(new Set(cartItems.map((item: { productId: string }) => item.productId))) as string[];
+      const uniqueIds = Array.from(new Set(cartItems.map((item: ReduxCartItem) => item.productId))) as string[];
       const productMap: Record<string, Product> = {};
       await Promise.all(
         uniqueIds.map(async (id: string) => {
@@ -38,7 +38,7 @@ export default function CartPage() {
   }, [cartItems]);
 
   // Calculate total
-  const total = cartItems.reduce((sum: number, item: { productId: string; quantity: number }) => {
+  const total = cartItems.reduce((sum: number, item: ReduxCartItem) => {
     const product = products[item.productId];
     return sum + (product ? product.price * item.quantity : 0);
   }, 0);
@@ -47,7 +47,7 @@ export default function CartPage() {
     <div className="max-w-3xl mx-auto px-4 py-10 mt-20">
       <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
       <div className="divide-y divide-gray-200">
-        {cartItems.map((item: { productId: string; size: string; quantity: number }) => {
+        {cartItems.map((item: ReduxCartItem) => {
           const product = products[item.productId];
           if (!product) return null;
           return (

@@ -80,21 +80,29 @@ export async function verifyToken(token: string) {
   return data;
 } 
 
-export async function createCheckout(userId: string, items: { id: string; quantity: number; size: string; unitPrice: number }[], options?: { appliedPromotion?: string, totalPrice?: number }) {
-  const body: { userId: string; items: typeof items; appliedPromotion?: string; totalPrice?: number } = { userId, items };
+export async function createCheckout(token: string, items: { id: string; quantity: number; size: string; unitPrice: number }[], options?: { appliedPromotion?: string, totalPrice?: number }) {
+  const body: { items: typeof items; appliedPromotion?: string; totalPrice?: number } = { items };
   if (options?.appliedPromotion) body.appliedPromotion = options.appliedPromotion;
   if (options?.totalPrice) body.totalPrice = options.totalPrice;
+  
   const res = await fetch('/api/checkout', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error('Checkout failed');
   return res.json();
 } 
 
-export async function getOrderHistory(userId: string) {
-  const res = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+export async function getOrderHistory(token: string) {
+  const res = await fetch('/api/orders', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || 'Failed to fetch order history');

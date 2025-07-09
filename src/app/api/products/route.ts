@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '@/lib/prisma';
 import { ProductResponse } from '../../../types/api';
-
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,13 +30,13 @@ export async function GET(request: NextRequest) {
         createdAt: product.createdAt.toISOString(),
         updatedAt: product.updatedAt.toISOString(),
         description: product.description || undefined,
-        images: product.images.map((img) => ({
+        images: product.images.map((img: any) => ({
           ...img,
           alt: img.alt || undefined,
           createdAt: img.createdAt.toISOString(),
           updatedAt: img.updatedAt.toISOString(),
         })),
-        sizes: product.sizes.map((sz) => ({
+        sizes: product.sizes.map((sz: any) => ({
           ...sz,
           createdAt: sz.createdAt.toISOString(),
           updatedAt: sz.updatedAt.toISOString(),
@@ -64,25 +62,25 @@ export async function GET(request: NextRequest) {
 
     // Filter by size if provided
     if (size) {
-      products = products.filter(product =>
-        product.sizes.some(s => s.size === size && s.stock > 0)
+      products = products.filter((product: any) =>
+        product.sizes.some((s: any) => s.size === size && s.stock > 0)
       );
     }
 
     // Convert decimal and date fields for API response, and map null to undefined
-    const formattedProducts = products.map((product) => ({
+    const formattedProducts = products.map((product: any) => ({
       ...product,
       price: Number(product.price),
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
       description: product.description || undefined,
-      images: product.images.map((img) => ({
+      images: product.images.map((img: any) => ({
         ...img,
         alt: img.alt || undefined,
         createdAt: img.createdAt.toISOString(),
         updatedAt: img.updatedAt.toISOString(),
       })),
-      sizes: product.sizes.map((sz) => ({
+      sizes: product.sizes.map((sz: any) => ({
         ...sz,
         createdAt: sz.createdAt.toISOString(),
         updatedAt: sz.updatedAt.toISOString(),

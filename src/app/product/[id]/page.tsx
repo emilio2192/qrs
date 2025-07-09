@@ -6,8 +6,7 @@ import ProductImageGallery from '../../components/ProductImageGallery';
 import { fetchProduct } from '../../../lib/request';
 import { Product } from '../../../types/api';
 import { useDispatch, useSelector } from 'react-redux';
-import { addItem as addCartItem } from '@/lib/store';
-import { AppState } from '@/lib/store';
+import { addItem as addCartItem, AppState, ReduxCartItem } from '@/lib/store';
 
 export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -34,7 +33,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
 
   // Calculate available stock without modifying the original product
   const getItemQuantity = (productId: string, size: string) => {
-    const item = cartItems.find((i: { productId: string; size: string; quantity: number }) => i.productId === productId && i.size === size);
+    const item = cartItems.find((i: ReduxCartItem) => i.productId === productId && i.size === size);
     return item ? item.quantity : 0;
   };
   const sizes = (product.sizes || []).map((s) => ({ 
@@ -129,13 +128,6 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                 productId: product.id,
                 size: selectedSize,
                 quantity,
-                id: '', // id will be generated on backend
-                cartId: '',
-                unitPrice: Number(product.price),
-                totalPrice: Number(product.price) * quantity,
-                createdAt: '',
-                updatedAt: '',
-                product,
               }));
               setQuantity(1);
               setSelectedSize(null);

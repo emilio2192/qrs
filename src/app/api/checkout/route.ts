@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, items, appliedPromotion, totalPrice } = await request.json();
+    // Extract user ID from JWT token
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
 
-    if (!userId || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'userId and items are required' }, { status: 400 });
+    const { items, appliedPromotion, totalPrice } = await request.json();
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'Items are required' }, { status: 400 });
     }
 
     // Use provided totalPrice if available, otherwise calculate
@@ -15,7 +22,7 @@ export async function POST(request: NextRequest) {
       : items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
 
     // Create the cart and items in a transaction, and update stock
-    const cart = await prisma.$transaction(async (tx) => {
+    const cart = await prisma.$transaction(async (tx: any) => {
       // Create cart
       const newCart = await tx.cart.create({
         data: {

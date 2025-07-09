@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '@/lib/prisma';
 import { BannerResponse } from '../../../types/api';
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -26,7 +24,7 @@ export async function GET() {
     });
 
     // Convert null values to undefined for TypeScript compatibility
-    const formattedBanners = banners.map(banner => ({
+    const formattedBanners = banners.map((banner: any) => ({
       ...banner,
       subtitle: banner.subtitle || undefined,
       description: banner.description || undefined,

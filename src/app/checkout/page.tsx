@@ -7,7 +7,7 @@ import { calculatePromotion, CartItem as PromoCartItem } from '@/lib/services/pr
 import { Product } from '@/types/api';
 import Image from 'next/image';
 import { useSelector, useDispatch } from 'react-redux';
-import { AppState, clearCart } from '@/lib/store';
+import { AppState, clearCart, ReduxCartItem } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
@@ -41,7 +41,7 @@ export default function CheckoutPage() {
       setError('');
       try {
         const prods = await Promise.all(
-          cartItems.map(item => fetchProduct(item.productId))
+          cartItems.map((item: ReduxCartItem) => fetchProduct(item.productId))
         );
         setProducts(prods);
       } catch {
@@ -54,7 +54,7 @@ export default function CheckoutPage() {
   }, [cartItems]);
 
   // Calculate promotion results for both options
-  const promoCartItems: PromoCartItem[] = cartItems.map(item => {
+  const promoCartItems: PromoCartItem[] = cartItems.map((item: ReduxCartItem) => {
     const product = products.find((p) => p && p.id === item.productId);
     return {
       id: item.productId,
@@ -100,12 +100,12 @@ export default function CheckoutPage() {
   });
 
   async function handleCheckout() {
-    if (!user) return;
+    if (!user || !token) return;
     setLoading(true);
     setError('');
     setSuccess('');
     try {
-      const items = cartItems.map(item => {
+      const items = cartItems.map((item: ReduxCartItem) => {
         const product = products.find((p) => p && p.id === item.productId);
         return {
           id: item.productId,
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
           unitPrice: product ? product.price : 0,
         };
       });
-      await createCheckout(user.id, items, {
+      await createCheckout(token, items, {
         appliedPromotion: promotionResult.appliedPromotion,
         totalPrice: promotionResult.bestTotal,
       });
@@ -158,7 +158,7 @@ export default function CheckoutPage() {
           ) : (
             <>
               <ul className="mb-6 divide-y divide-gray-200">
-                {cartItems.map((item) => {
+                {cartItems.map((item: ReduxCartItem) => {
                   const product = products.find((p) => p && p.id === item.productId);
                   return (
                     <li key={item.productId + item.size} className="py-4 flex items-center gap-4">

@@ -1,22 +1,14 @@
-// Banner API interfaces
-export interface Banner {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  imageUrl: string;
-  buttonText?: string;
-  buttonLink?: string;
-  order: number;
-}
-
-export interface BannerResponse {
+// API Response interfaces
+export interface ApiResponse<T = any> {
   success: boolean;
-  data?: Banner[];
+  data?: T;
   error?: string;
 }
 
-// Product API interfaces
+export interface ProductResponse extends ApiResponse<Product[]> {}
+export interface BannerResponse extends ApiResponse<Banner[]> {}
+
+// Product interfaces
 export interface Product {
   id: string;
   name: string;
@@ -27,18 +19,8 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  category?: ProductCategory;
   images?: ProductImage[];
   sizes?: ProductSize[];
-}
-
-export interface ProductCategory {
-  id: string;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ProductImage {
@@ -61,9 +43,48 @@ export interface ProductSize {
   updatedAt: string;
 }
 
-export interface ProductResponse {
-  success: boolean;
-  data: Product[];
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl: string;
+  buttonText?: string;
+  buttonLink?: string;
+  order: number;
+}
+
+// Authentication interfaces
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  user: User;
+  token: string;
+}
+
+export interface SignupRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface SignupResponse {
+  user: User;
+  token: string;
+}
+
+export interface TokenVerificationRequest {
+  token: string;
+}
+
+export interface TokenVerificationResponse {
+  valid: boolean;
+  user?: User;
+  token?: string;
+  expiresAt?: string;
   error?: string;
 }
 
@@ -76,12 +97,6 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface UserResponse {
-  success: boolean;
-  data?: User;
-  error?: string;
 }
 
 // Cart API interfaces
@@ -112,15 +127,25 @@ export interface CartItem {
   product?: Product;
 }
 
-export interface CartResponse {
-  success: boolean;
-  data?: Cart;
-  error?: string;
+// Checkout API interfaces
+export interface CheckoutRequest {
+  items: CheckoutItem[];
+  appliedPromotion?: string;
+  totalPrice?: number;
 }
 
-// Generic API response interface
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
+export interface CheckoutItem {
+  id: string;
+  quantity: number;
+  size: string;
+  unitPrice: number;
+}
+
+export interface CheckoutResponse {
+  cart: Cart;
+}
+
+// Order History API interfaces
+export interface OrderHistoryResponse {
+  orders: Cart[];
 } 

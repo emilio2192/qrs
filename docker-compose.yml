@@ -25,17 +25,22 @@ services:
       - ./:/app
       - /app/node_modules
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=postgresql://qrs_user:qrs_password@host.docker.internal:5433/qrs_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - NEXT_PUBLIC_APP_URL=http://localhost:3001
     command: sh -c "apk add --no-cache openssl && npm install && npm run dev"
     depends_on:
       - postgres
     networks:
       - qrs_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
