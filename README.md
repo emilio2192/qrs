@@ -114,10 +114,13 @@ qrs/
 - **Docker** - Containerized development environment
 
 ### Authentication
-- **JWT Tokens** - Secure authentication
-- **Password Hashing** - bcrypt for password security
+- **JWT Tokens** - Secure authentication with 24-hour expiration
+- **Password Hashing** - bcrypt with 12 salt rounds for password security
 - **Protected Routes** - Middleware for API protection
 - **User Types** - VIP and COMMON user support
+- **Token Storage** - Client-side localStorage with useAuthToken hook
+- **Token Verification** - Endpoint to verify JWT token validity and expiration
+- **Client-side Validation** - useAuthToken hook with validateToken function
 
 ## 📝 Environment Variables
 
@@ -128,11 +131,21 @@ Create a `.env.local` file in the root directory (or use `.env.example` as a tem
 DATABASE_URL="postgresql://qrs_user:qrs_password@localhost:5432/qrs_db"
 
 # Authentication
-JWT_SECRET="your-secret-key-change-in-production"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 
 # Next.js
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Node Environment
+NODE_ENV=development
 ```
+
+### Environment Variables Explained
+
+- **DATABASE_URL**: PostgreSQL connection string for Prisma
+- **JWT_SECRET**: Secret key for signing JWT tokens (change in production!)
+- **NEXT_PUBLIC_APP_URL**: Public URL for the application
+- **NODE_ENV**: Environment mode (development/production)
 
 ### Vercel Environment Variables
 - Vercel does **not** use `.env` files from your repo for security reasons.
@@ -144,20 +157,93 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Signup
 ```bash
 POST /api/auth/signup
+Content-Type: application/json
+
 {
-  "email": "user@example.com",
-  "password": "password123",
   "name": "John Doe",
-  "userType": "COMMON" // or "VIP"
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "userType": "COMMON",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  "token": "jwt_token_here"
 }
 ```
 
 ### Login
 ```bash
 POST /api/auth/login
+Content-Type: application/json
+
 {
   "email": "user@example.com",
   "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "userType": "COMMON",
+    "isActive": true
+  },
+  "token": "jwt_token_here"
+}
+```
+
+### Error Responses
+Both endpoints return error responses in this format:
+```json
+{
+  "error": "Error message here"
+}
+```
+
+### Token Verification
+```bash
+POST /api/auth/verify
+Content-Type: application/json
+
+{
+  "token": "your-jwt-token-here"
+}
+```
+
+**Response (Valid Token):**
+```json
+{
+  "valid": true,
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "userType": "COMMON",
+    "isActive": true
+  },
+  "token": "jwt_token_here",
+  "expiresAt": "2024-01-02T00:00:00.000Z"
+}
+```
+
+**Response (Invalid/Expired Token):**
+```json
+{
+  "error": "Token expired"
 }
 ```
 
@@ -166,6 +252,43 @@ All cart and product APIs require authentication. Include the JWT token in the A
 ```bash
 Authorization: Bearer <your-jwt-token>
 ```
+
+### Frontend Token Validation
+
+Use the `useAuthToken` hook to validate tokens in your components:
+
+```typescript
+import { useAuthToken } from '@/hooks/useAuthToken';
+
+function MyComponent() {
+  const { validateToken, isValidating } = useAuthToken();
+
+  const checkToken = async () => {
+    const result = await validateToken();
+    
+    if (result.isValid) {
+      console.log('Token is valid, user:', result.user);
+    } else {
+      console.log('Token is invalid:', result.error);
+      // Token will be automatically removed from storage
+    }
+  };
+
+  return (
+    <button onClick={checkToken} disabled={isValidating}>
+      {isValidating ? 'Validating...' : 'Check Token'}
+    </button>
+  );
+}
+```
+
+### Security Features
+- **Password Hashing**: bcrypt with 12 salt rounds
+- **JWT Expiration**: 24-hour token expiration
+- **Input Validation**: Email format and password length validation
+- **Error Handling**: Generic error messages to prevent information leakage
+- **Token Verification**: Comprehensive JWT validation including expiration and user status checks
+- **Auto-cleanup**: Invalid/expired tokens are automatically removed from storage
 
 ## 🚀 Deployment
 

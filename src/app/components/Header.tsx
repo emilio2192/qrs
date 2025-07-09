@@ -5,10 +5,19 @@ import { faShoppingBag, faSearch, faBars, faUser } from '@fortawesome/free-solid
 import { useTranslations } from 'next-intl';
 import Button from '../shared/Button';
 import { usePathname } from 'next/navigation';
+import { useCart } from '@/hooks/useCart';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
   const t = useTranslations();
   const pathname = usePathname();
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const navLinks = [
     { href: '/shop/female', label: t('navigation.female') },
@@ -42,14 +51,31 @@ export default function Header() {
           ))}
         </nav>
         {/* Icons */}
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="flex items-center gap-0.5 md:gap-2">
           {/* Cart */}
-          <Button icon={<FontAwesomeIcon icon={faShoppingBag}  className="w-6 h-6 text-black" />} variant='ghost' label={t('navigation.cart')} className="rounded-full" iconOnly={true} />
+          <div className="relative">
+            <Link href="/cart">
+              <Button 
+                icon={<FontAwesomeIcon icon={faShoppingBag} className="w-6 h-6 text-black" />} 
+                variant='ghost' 
+                label={t('navigation.cart')} 
+                className="rounded-full" 
+                iconOnly={true} 
+              />
+            </Link>
+            {isClient && cartItemCount > 0 && (
+              <span className="absolute top-1 left-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                {cartItemCount > 99 ? '99+' : cartItemCount}
+              </span>
+            )}
+          </div>
 
           {/* Search */}
           <Button icon={<FontAwesomeIcon icon={faSearch}  className="w-6 h-6 text-black" />} variant='ghost' className="rounded-full" iconOnly={true} />
           {/* Avatar */}
-          <Button icon={<FontAwesomeIcon icon={faUser}  className="w-6 h-6 text-black" />} variant='ghost' label={t('navigation.account')} className="rounded-full" iconOnly={true} />
+          <Link href="/profile">
+            <Button icon={<FontAwesomeIcon icon={faUser}  className="w-6 h-6 text-black" />} variant='ghost' label={t('navigation.account')} className="rounded-full" iconOnly={true} />
+          </Link>
 
           {/* Hamburger (mobile only) */}
           <button className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors">

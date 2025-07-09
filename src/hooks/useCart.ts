@@ -15,9 +15,14 @@ class CartManager {
   private static instance: CartManager;
   private listeners: Set<(items: CartItem[]) => void> = new Set();
   private items: CartItem[] = [];
+  private initialized = false;
 
   private constructor() {
-    this.loadFromStorage();
+    // Don't load from storage during SSR
+    if (typeof window !== 'undefined') {
+      this.loadFromStorage();
+      this.initialized = true;
+    }
   }
 
   static getInstance(): CartManager {
@@ -29,9 +34,11 @@ class CartManager {
 
   private loadFromStorage(): void {
     try {
-      const stored = sessionStorage.getItem(CART_STORAGE_KEY);
-      if (stored) {
-        this.items = JSON.parse(stored);
+      if (typeof window !== 'undefined') {
+        const stored = sessionStorage.getItem(CART_STORAGE_KEY);
+        if (stored) {
+          this.items = JSON.parse(stored);
+        }
       }
     } catch (error) {
       console.error('Error loading cart from storage:', error);
@@ -41,8 +48,9 @@ class CartManager {
 
   private saveToStorage(): void {
     try {
-      console.log('Saving cart to storage:', this.items);
-      sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.items));
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.items));
+      }
     } catch (error) {
       console.error('Error saving cart to storage:', error);
     }
@@ -54,8 +62,14 @@ class CartManager {
 
   subscribe(listener: (items: CartItem[]) => void): () => void {
     this.listeners.add(listener);
-    // Immediately call listener with current state
-    listener([...this.items]);
+    
+    // Only call listener immediately if we're in the browser and initialized
+    if (typeof window !== 'undefined' && this.initialized) {
+      listener([...this.items]);
+    } else {
+      // During SSR, call with empty array to prevent hydration mismatch
+      listener([]);
+    }
     
     // Return unsubscribe function
     return () => {
@@ -131,11 +145,15 @@ class CartManager {
 
 export function useCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const cartManager = CartManager.getInstance();
 
   useEffect(() => {
     // Subscribe to cart changes
-    const unsubscribe = cartManager.subscribe(setCartItems);
+    const unsubscribe = cartManager.subscribe((items) => {
+      setCartItems(items);
+      setCartLoaded(true);
+    });
     
     // Cleanup subscription on unmount
     return unsubscribe;
@@ -171,6 +189,7 @@ export function useCart() {
 
   return {
     cartItems,
+    cartLoaded,
     addItem,
     updateItemQuantity,
     removeItem,

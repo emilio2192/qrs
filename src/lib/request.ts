@@ -23,4 +23,84 @@ export async function fetchBanners() {
   const data = await res.json();
   if (!data.success) throw new Error(data.error || 'Failed to fetch banners');
   return data.data;
+}
+
+// Authentication functions
+export async function loginUser(email: string, password: string) {
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await res.json();
+  
+  if (!res.ok) {
+    throw new Error(data.error || 'Login failed');
+  }
+
+  return data;
+}
+
+export async function signupUser(name: string, email: string, password: string) {
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, email, password }),
+  });
+
+  const data = await res.json();
+  
+  if (!res.ok) {
+    throw new Error(data.error || 'Signup failed');
+  }
+
+  return data;
+}
+
+export async function verifyToken(token: string) {
+  const res = await fetch('/api/auth/verify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token }),
+  });
+
+  const data = await res.json();
+  
+  if (!res.ok) {
+    throw new Error(data.error || 'Token verification failed');
+  }
+
+  return data;
+} 
+
+export async function createCheckout(userId: string, items: Array<{ id: string; quantity: number; size: string; unitPrice: number }>) {
+  const res = await fetch('/api/checkout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId, items }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Checkout failed');
+  }
+  return data.cart;
+} 
+
+export async function getOrderHistory(userId: string) {
+  const res = await fetch(`/api/orders?userId=${encodeURIComponent(userId)}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to fetch order history');
+  }
+  return data.orders;
 } 
