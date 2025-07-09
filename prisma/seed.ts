@@ -3,13 +3,9 @@ import { PrismaClient } from '../src/generated/prisma';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
-
   // Check if banners already exist
   const existingBanners = await prisma.banner.count();
   if (existingBanners === 0) {
-    console.log('Creating promotional banners...');
-    
     const banners = [
       {
         title: 'Summer Collection 2024',
@@ -67,18 +63,12 @@ async function main() {
       const banner = await prisma.banner.create({
         data: bannerData,
       });
-      console.log(`Created banner: ${banner.title}`);
     }
-    console.log('✅ Promotional banners created successfully');
-  } else {
-    console.log('Banners already exist, skipping...');
   }
 
   // Check if categories already exist
   const existingCategories = await prisma.productCategory.count();
   if (existingCategories === 0) {
-    console.log('Creating product categories...');
-    
     const categories = [
       { name: 'T-Shirts', description: 'Comfortable t-shirts for everyday wear' },
       { name: 'Jeans', description: 'Classic and modern jeans styles' },
@@ -94,18 +84,12 @@ async function main() {
         data: categoryData,
       });
       createdCategories.push(category);
-      console.log(`Created category: ${category.name}`);
     }
-    console.log('✅ Product categories created successfully');
-  } else {
-    console.log('Categories already exist, skipping...');
   }
 
   // Check if products already exist
   const existingProducts = await prisma.product.count();
   if (existingProducts === 0) {
-    console.log('Creating clothing products with categories and gender...');
-    
     // Get categories for reference
     const categories = await prisma.productCategory.findMany();
     const categoryMap = categories.reduce((acc: Record<string, string>, cat: { name: string; id: string }) => {
@@ -358,19 +342,13 @@ async function main() {
         },
       });
       
-      console.log(`Created product: ${product.name} (${product.gender})`);
     }
 
-    console.log('✅ Clothing products with categories and gender seeded successfully');
-  } else {
-    console.log('Products already exist, skipping...');
   }
 
   // Check if users already exist
   const existingUsers = await prisma.user.count();
   if (existingUsers === 0) {
-    console.log('Creating test users...');
-    
     // Import bcrypt for password hashing
     const bcrypt = require('bcrypt');
     const saltRounds = 10;
@@ -398,14 +376,7 @@ async function main() {
       const user = await prisma.user.create({
         data: userData,
       });
-      console.log(`Created user: ${user.name} (${user.userType})`);
     }
-    console.log('✅ Test users created successfully');
-    console.log('📧 Login credentials:');
-    console.log('   Common user: common@example.com / password123');
-    console.log('   VIP user: vip@example.com / password123');
-  } else {
-    console.log('Users already exist, skipping...');
   }
 }
 

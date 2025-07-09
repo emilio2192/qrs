@@ -5,13 +5,15 @@ import { useCart } from '@/hooks/useCart';
 import { useEffect, useState } from 'react';
 import { fetchProduct, createCheckout } from '@/lib/request';
 import { calculatePromotion, CartItem as PromoCartItem } from '@/lib/services/promo';
+import { Product } from '@/types/api';
+import Image from 'next/image';
 
 export default function CheckoutPage() {
   const { getToken, getUser } = useAuthToken();
   const token = getToken();
   const user = getUser();
   const { cartItems, clearCart } = useCart();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -30,7 +32,7 @@ export default function CheckoutPage() {
           cartItems.map(item => fetchProduct(item.id))
         );
         setProducts(prods);
-      } catch (err) {
+      } catch {
         setError('Failed to load product info.');
       } finally {
         setLoading(false);
@@ -100,14 +102,14 @@ export default function CheckoutPage() {
           unitPrice: product ? product.price : 0,
         };
       });
-      const cart = await createCheckout(user.id, items, {
+      await createCheckout(user.id, items, {
         appliedPromotion: promotionResult.appliedPromotion,
         totalPrice: promotionResult.bestTotal,
       });
       setSuccess('Checkout successful! Your order has been placed.');
       clearCart();
-    } catch (err: any) {
-      setError(err.message || 'Checkout failed.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Checkout failed.');
     } finally {
       setLoading(false);
     }
@@ -128,12 +130,18 @@ export default function CheckoutPage() {
           ) : (
             <>
               <ul className="mb-6 divide-y divide-gray-200">
-                {cartItems.map((item, idx) => {
+                {cartItems.map((item) => {
                   const product = products.find((p) => p && p.id === item.id);
                   return (
                     <li key={item.id + item.size} className="py-4 flex items-center gap-4">
                       {product && product.images && product.images[0] && (
-                        <img src={product.images[0].url} alt={product.images[0].alt || product.name} className="w-16 h-16 object-cover rounded" />
+                        <Image
+                          src={product.images[0].url}
+                          alt={product.images[0].alt || product.name}
+                          width={64}
+                          height={64}
+                          className="rounded-md"
+                        />
                       )}
                       <div className="flex-1">
                         <div className="font-semibold">{product ? product.name : 'Product'}</div>

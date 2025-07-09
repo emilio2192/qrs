@@ -80,8 +80,8 @@ export async function verifyToken(token: string) {
   return data;
 } 
 
-export async function createCheckout(userId: string, items: any[], options?: { appliedPromotion?: string, totalPrice?: number }) {
-  const body: any = { userId, items };
+export async function createCheckout(userId: string, items: { id: string; quantity: number; size: string; unitPrice: number }[], options?: { appliedPromotion?: string, totalPrice?: number }) {
+  const body: { userId: string; items: typeof items; appliedPromotion?: string; totalPrice?: number } = { userId, items };
   if (options?.appliedPromotion) body.appliedPromotion = options.appliedPromotion;
   if (options?.totalPrice) body.totalPrice = options.totalPrice;
   const res = await fetch('/api/checkout', {

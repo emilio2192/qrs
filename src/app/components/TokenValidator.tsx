@@ -1,20 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuthToken } from '@/hooks/useAuthToken';
 
 export default function TokenValidator() {
   const { validateToken, isValidating, getToken } = useAuthToken();
   const [validationResult, setValidationResult] = useState<{
     isValid: boolean;
-    user?: any;
+    user?: { name: string; email: string; userType: string };
     error?: string;
   } | null>(null);
 
-  const handleValidateToken = async () => {
+  const handleValidateToken = useCallback(async () => {
     const result = await validateToken();
     setValidationResult(result);
-  };
+  }, [validateToken]);
 
   useEffect(() => {
     // Auto-validate token on component mount if token exists
@@ -22,7 +22,7 @@ export default function TokenValidator() {
     if (token) {
       handleValidateToken();
     }
-  }, []);
+  }, [getToken, handleValidateToken]);
 
   return (
     <div className="p-4 border rounded">

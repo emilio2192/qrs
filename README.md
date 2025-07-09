@@ -351,19 +351,19 @@ This opens a web UI at http://localhost:5555 to inspect and edit your database.
 
 To reset the database (wipe all data and start fresh):
 
-1. Stop the database:
+1. **Stop the database:**
+   ```sh
+   npm run docker:down
    ```
-npm run docker:down
+2. **Remove the Docker volume:**
+   ```sh
+   docker volume rm qrs_postgres_data
    ```
-2. Remove the Docker volume:
+3. **Start the database again:**
+   ```sh
+   npm run docker:up
    ```
-docker volume rm qrs_postgres_data
-   ```
-3. Start the database again:
-   ```
-npm run docker:up
-   ```
-4. Repeat steps 2-4 above (generate, push, seed).
+4. **Repeat steps 2–4 above** (generate, push, seed).
 
 ---
 
@@ -371,3 +371,35 @@ npm run docker:up
 - The database connection details are configured in your `.env` file.
 - Only Docker is used for PostgreSQL; all other services run locally.
 - If you change the Prisma schema, always re-run `npm run db:generate` and `npm run db:push`.
+
+## Architecture & Design Decisions
+
+This project is built with a focus on simplicity, maintainability, and a good user experience. Here are the main points about how it is structured and why:
+
+- **Next.js**: The app uses Next.js for both frontend and backend. Pages are server-rendered for better SEO and fast loading. API routes are used for backend logic (like checkout and authentication).
+
+- **Prisma ORM**: Prisma is used to talk to the PostgreSQL database. It makes database queries easy and safe, and helps keep the code clean.
+
+- **PostgreSQL with Docker**: The database runs in a Docker container. This makes it easy to set up and reset the database for development. You don’t need to install Postgres on your computer.
+
+- **Cart Logic**: The cart is stored in the browser’s sessionStorage, so it stays even if you refresh the page. The cart logic is in a custom React hook, making it easy to use in any component.
+
+- **Promotion Logic**: All discount and promotion calculations are done in a single utility function. This makes it easy to test and update the rules. The logic always tries to give the customer the best deal, and VIP users can choose which discount to use.
+
+- **Authentication**: JWT tokens are used for login. User info and tokens are stored in localStorage. The app supports both common and VIP users.
+  - JWT tokens expire in 24 hours for security.
+- **Order History**: Orders are saved in the database with the promotion used and the final price. The order history page shows all details, including the discount applied.
+
+- **Testing**: The promotion logic is covered by unit tests to make sure all scenarios work as expected.
+
+- **Why these choices?**
+  - Next.js and Prisma are popular, well-supported, and easy to use.
+  - Docker makes development setup simple for everyone.
+  - Keeping business logic (like promotions) in one place makes the app easier to maintain and test.
+
+If you have a B2+ English level, you should find the code and structure easy to follow. The code is organized by feature, and most logic is in reusable hooks or utility files.
+
+## Improvements (Planned or Possible)
+
+- **Abandoned Cart Sync**: The database already supports tracking abandoned carts. A future improvement is to implement hybrid cart logic: when a user logs in or out, the cart in sessionStorage will be synced with the database. This way, users can keep their cart across devices or after logging in.
+- More advanced admin features, order status tracking, and better error handling can be added as needed.

@@ -51,7 +51,6 @@ export function useAuthToken() {
         try {
           return JSON.parse(userData);
         } catch (error) {
-          console.error('Error parsing user data:', error);
           return null;
         }
       }

@@ -25,8 +25,6 @@ export interface PromotionResult {
  * Returns both options for VIPs so the frontend can let the user choose.
  */
 export function calculatePromotion(cart: CartItem[], isVIP: boolean, shouldApplyVipDiscount: boolean = false): PromotionResult {
-  console.log('calculatePromotion called with:', { cart, isVIP });
-  
   // Flatten cart to a list of individual items (for 3-for-2 logic)
   const items: number[] = [];
   cart.forEach(item => {
@@ -36,20 +34,19 @@ export function calculatePromotion(cart: CartItem[], isVIP: boolean, shouldApply
   });
 
   const cartTotal = items.reduce((acc, v) => acc + v, 0);
-  console.log('Cart total:', cartTotal, 'Items:', items);
 
-  // 3 for 2: For every 3 items, the cheapest is free
+  // 3 for 2: For every 3 items, the cheapest in each group of 3 is free (maximize discount)
   let threeForTwoTotal = cartTotal;
   if (items.length >= 3) {
-    const sorted = [...items].sort((a, b) => a - b);
+    const sorted = [...items].sort((a, b) => b - a); // Descending
     let sum = 0;
     for (let i = 0; i < sorted.length; i += 3) {
-      // Add two most expensive in each group of 3
-      if (i + 2 < sorted.length) {
-        sum += sorted[i + 1] + sorted[i + 2];
+      const group = sorted.slice(i, i + 3);
+      if (group.length === 3) {
+        // Pay for the two most expensive
+        sum += group[0] + group[1];
       } else {
-        // Add remaining items
-        sum += sorted.slice(i).reduce((acc, v) => acc + v, 0);
+        sum += group.reduce((acc, v) => acc + v, 0);
       }
     }
     threeForTwoTotal = sum;
@@ -100,9 +97,6 @@ export function calculatePromotion(cart: CartItem[], isVIP: boolean, shouldApply
     bestTotal = threeForTwoTotal;
     breakdown = `3 for 2: Cheapest item free for every 3. You pay $${threeForTwoTotal.toFixed(2)}.`;
   }
-
-  console.log('Options:', options);
-  console.log('Applied promotion:', { appliedPromotion, bestTotal, breakdown });
 
   return {
     bestTotal,

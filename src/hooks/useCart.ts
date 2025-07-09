@@ -41,7 +41,6 @@ class CartManager {
         }
       }
     } catch (error) {
-      console.error('Error loading cart from storage:', error);
       this.items = [];
     }
   }
@@ -52,7 +51,6 @@ class CartManager {
         sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(this.items));
       }
     } catch (error) {
-      console.error('Error saving cart to storage:', error);
     }
   }
 
@@ -157,35 +155,35 @@ export function useCart() {
     
     // Cleanup subscription on unmount
     return unsubscribe;
-  }, []);
+  }, [cartManager]);
 
   const addItem = useCallback((id: string, quantity: number = 1, size: string) => {
     cartManager.addItem(id, quantity, size);
-  }, []);
+  }, [cartManager]);
 
   const updateItemQuantity = useCallback((id: string, quantity: number, size: string) => {
     cartManager.updateItemQuantity(id, quantity, size);
-  }, []);
+  }, [cartManager]);
 
   const removeItem = useCallback((id: string, size: string) => {
     cartManager.removeItem(id, size);
-  }, []);
+  }, [cartManager]);
 
   const clearCart = useCallback(() => {
     cartManager.clearCart();
-  }, []);
+  }, [cartManager]);
 
   const getItemQuantity = useCallback((id: string, size: string): number => {
     return cartManager.getItemQuantity(id, size);
-  }, []);
+  }, [cartManager]);
 
   const getTotalItems = useCallback((): number => {
     return cartManager.getTotalItems();
-  }, []);
+  }, [cartManager]);
 
   const getItemByProductId = useCallback((id: string): CartItem[] => {
     return cartManager.getItemByProductId(id);
-  }, []);
+  }, [cartManager]);
 
   return {
     cartItems,

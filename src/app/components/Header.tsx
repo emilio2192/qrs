@@ -7,6 +7,7 @@ import Button from '../shared/Button';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { useEffect, useState } from 'react';
+import MobileMenu from './MobileMenu';
 
 export default function Header() {
   const t = useTranslations();
@@ -14,6 +15,7 @@ export default function Header() {
   const { getTotalItems } = useCart();
   const cartItemCount = getTotalItems();
   const [isClient, setIsClient] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -78,11 +80,16 @@ export default function Header() {
           </Link>
 
           {/* Hamburger (mobile only) */}
-          <button className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button
+            className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+          >
             <FontAwesomeIcon icon={faBars} className="w-6 h-6 text-black" />
           </button>
         </div>
       </div>
+      <MobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
     </header>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, use, useMemo } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useTranslations } from 'next-intl';
 import Button from '../../shared/Button';
 import ProductImageGallery from '../../components/ProductImageGallery';
@@ -14,10 +14,9 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const { addItem, getItemByProductId, getItemQuantity } = useCart();
+  const { addItem, getItemQuantity } = useCart();
   
-  // Use useMemo to prevent recalculation on every render
-  const itemStored = useMemo(() => getItemByProductId(params.id), [params.id, getItemByProductId]);
+  // Note: getItemByProductId is available for potential future features
 
   useEffect(() => {
     fetchProduct(params.id).then(setProduct);

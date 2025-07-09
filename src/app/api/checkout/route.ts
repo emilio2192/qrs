@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
           status: 'ACTIVE',
           isActive: true,
           items: {
-            create: items.map((item: any) => ({
+            create: items.map((item: { id: string; size: string; quantity: number; unitPrice: number }) => ({
               productId: item.id,
               size: item.size,
               quantity: item.quantity,

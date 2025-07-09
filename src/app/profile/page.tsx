@@ -12,7 +12,19 @@ export default function ProfilePage() {
   const user = getUser(); // Call once per render
   const userId = user?.id;
   const [tab, setTab] = useState<'profile' | 'orders'>('profile');
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<{
+    id: string;
+    createdAt: string;
+    items: {
+      productId: string;
+      quantity: number;
+      size: string;
+      unitPrice: number;
+      product: { id: string; name: string; price: number };
+    }[];
+    appliedPromotion?: string | null;
+    totalPrice?: number;
+  }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,8 +44,8 @@ export default function ProfilePage() {
         try {
           const data = await getOrderHistory(userId);
           setOrders(data);
-        } catch (err: any) {
-          setError(err.message || 'Failed to load order history.');
+        } catch (err: unknown) {
+          setError(err instanceof Error ? err.message : 'Failed to load order history.');
         } finally {
           setLoading(false);
         }
