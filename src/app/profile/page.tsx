@@ -18,6 +18,9 @@ export default function ProfilePage() {
 
   function handleLogout() {
     removeToken();
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('qrs_cart');
+    }
     window.location.reload();
   }
 

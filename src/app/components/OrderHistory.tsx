@@ -20,6 +20,8 @@ type Order = {
   id: string;
   createdAt: string;
   items: OrderItem[];
+  appliedPromotion?: string | null;
+  totalPrice?: number;
 };
 
 type OrderHistoryProps = {
@@ -36,7 +38,9 @@ export default function OrderHistory({ orders }: OrderHistoryProps) {
   return (
     <div className="space-y-4">
       {orders.map((order) => {
-        const total = order.items.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0);
+        const originalTotal = order.items.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0);
+        const finalTotal = order.totalPrice != null ? Number(order.totalPrice) : originalTotal;
+        const discount = originalTotal - finalTotal;
         const isOpen = openOrderId === order.id;
         return (
           <div key={order.id} className="border rounded shadow-sm bg-white">
@@ -47,11 +51,16 @@ export default function OrderHistory({ orders }: OrderHistoryProps) {
             >
               <span className="font-semibold text-black">#Order {order.id}</span>
               <span className="text-gray-500 text-sm">{new Date(order.createdAt).toLocaleString()}</span>
-              <span className="font-bold text-green-700">${total.toFixed(2)}</span>
+              <span className="font-bold text-green-700">${finalTotal.toFixed(2)}</span>
               <span className="ml-2 text-xs text-gray-400">{isOpen ? '▲' : '▼'}</span>
             </button>
             {isOpen && (
               <div className="px-4 pb-4">
+                {order.appliedPromotion && (
+                  <div className="mb-2 text-sm text-blue-700">
+                    <span className="font-semibold">Promotion:</span> {order.appliedPromotion.replace('_', ' ')}
+                  </div>
+                )}
                 <table className="w-full text-sm mt-2 border-separate border-spacing-0">
                   <thead>
                     <tr className="border-b bg-gray-50">
@@ -79,6 +88,11 @@ export default function OrderHistory({ orders }: OrderHistoryProps) {
                     ))}
                   </tbody>
                 </table>
+                <div className="flex flex-col items-end mt-4 space-y-1">
+                  <div className="text-gray-600">Original Total: <span className="font-medium">${originalTotal.toFixed(2)}</span></div>
+                  <div className="text-green-700">Discount: <span className="font-medium">-${discount.toFixed(2)}</span></div>
+                  <div className="text-lg font-bold">Final Total: ${finalTotal.toFixed(2)}</div>
+                </div>
               </div>
             )}
           </div>

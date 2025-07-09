@@ -80,20 +80,17 @@ export async function verifyToken(token: string) {
   return data;
 } 
 
-export async function createCheckout(userId: string, items: Array<{ id: string; quantity: number; size: string; unitPrice: number }>) {
+export async function createCheckout(userId: string, items: any[], options?: { appliedPromotion?: string, totalPrice?: number }) {
+  const body: any = { userId, items };
+  if (options?.appliedPromotion) body.appliedPromotion = options.appliedPromotion;
+  if (options?.totalPrice) body.totalPrice = options.totalPrice;
   const res = await fetch('/api/checkout', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ userId, items }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || 'Checkout failed');
-  }
-  return data.cart;
+  if (!res.ok) throw new Error('Checkout failed');
+  return res.json();
 } 
 
 export async function getOrderHistory(userId: string) {

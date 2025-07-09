@@ -4,6 +4,7 @@ import AuthPrompt from './AuthPrompt';
 import { useCart } from '@/hooks/useCart';
 import { useEffect, useState } from 'react';
 import { fetchProduct, createCheckout } from '@/lib/request';
+import { calculatePromotion, CartItem as PromoCartItem } from '@/lib/services/promo';
 
 export default function CheckoutPage() {
   const { getToken, getUser } = useAuthToken();
@@ -38,6 +39,52 @@ export default function CheckoutPage() {
     loadProducts();
   }, [cartItems]);
 
+  // Calculate promotion results for both options
+  const promoCartItems: PromoCartItem[] = cartItems.map(item => {
+    const product = products.find((p) => p && p.id === item.id);
+    return {
+      id: item.id,
+      price: product ? product.price : 0,
+      quantity: item.quantity,
+      size: item.size,
+    };
+  });
+
+  const isVIP = user?.userType === 'VIP';
+
+  // Calculate both promotions to determine which is better
+  const promoResult3x2 = calculatePromotion(promoCartItems, isVIP, false);
+  const promoResultVIP = calculatePromotion(promoCartItems, isVIP, true);
+
+  // Set initial checkbox state based on which promo is better
+  const getInitialVipDiscount = () => {
+    if (!isVIP) return false;
+    // If VIP 15% is better or equal, check by default
+    return promoResultVIP.bestTotal <= promoResult3x2.bestTotal;
+  };
+
+  const [applyVipDiscount, setApplyVipDiscount] = useState(getInitialVipDiscount());
+
+  // Update checkbox state if cart or products change
+  useEffect(() => {
+    setApplyVipDiscount(getInitialVipDiscount());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems, products, isVIP]);
+
+  const shouldApplyVipDiscount = isVIP && applyVipDiscount;
+  
+  // Calculate promotion results - this will re-run when applyVipDiscount changes
+  const promotionResult = calculatePromotion(promoCartItems, isVIP, shouldApplyVipDiscount);
+  
+  // Debug logging
+  console.log('Promotion calculation:', {
+    isVIP,
+    applyVipDiscount,
+    shouldApplyVipDiscount,
+    cartItemsCount: cartItems.length,
+    promotionResult
+  });
+
   async function handleCheckout() {
     if (!user) return;
     setLoading(true);
@@ -53,7 +100,10 @@ export default function CheckoutPage() {
           unitPrice: product ? product.price : 0,
         };
       });
-      const cart = await createCheckout(user.id, items);
+      const cart = await createCheckout(user.id, items, {
+        appliedPromotion: promotionResult.appliedPromotion,
+        totalPrice: promotionResult.bestTotal,
+      });
       setSuccess('Checkout successful! Your order has been placed.');
       clearCart();
     } catch (err: any) {
@@ -95,14 +145,69 @@ export default function CheckoutPage() {
                   );
                 })}
               </ul>
-              <div className="flex justify-between items-center mb-6">
-                <span className="font-semibold">Total:</span>
-                <span className="text-lg font-bold">
-                  ${cartItems.reduce((sum, item) => {
-                    const product = products.find((p) => p && p.id === item.id);
-                    return sum + (product ? product.price * item.quantity : 0);
-                  }, 0).toFixed(2)}
-                </span>
+              {/* VIP Discount Section */}
+              {isVIP && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="vip-discount"
+                        checked={applyVipDiscount}
+                        onChange={(e) => setApplyVipDiscount(e.target.checked)}
+                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="vip-discount" className="text-sm font-medium text-gray-700">
+                        Apply VIP 15% Discount
+                      </label>
+                    </div>
+                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">VIP ONLY</span>
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    💎 VIP members can choose to apply 15% off at any time. For 3+ items, the best discount is recommended, but you can always toggle between available options.
+                  </p>
+                </div>
+              )}
+
+              {/* Promotion Results */}
+              {promotionResult.appliedPromotion !== 'NONE' && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                  <div className="text-sm text-green-800">
+                    <span className="font-semibold">🎉 Promotion Applied:</span> {promotionResult.breakdown}
+                  </div>
+                </div>
+              )}
+
+              {/* Price Breakdown */}
+              <div className="mb-6 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">
+                    ${cartItems.reduce((sum, item) => {
+                      const product = products.find((p) => p && p.id === item.id);
+                      return sum + (product ? product.price * item.quantity : 0);
+                    }, 0).toFixed(2)}
+                  </span>
+                </div>
+                
+                {promotionResult.appliedPromotion !== 'NONE' && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span>Discount:</span>
+                    <span className="font-medium">
+                      -${(cartItems.reduce((sum, item) => {
+                        const product = products.find((p) => p && p.id === item.id);
+                        return sum + (product ? product.price * item.quantity : 0);
+                      }, 0) - promotionResult.bestTotal).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="font-semibold text-lg">Total:</span>
+                  <span className="text-xl font-bold">
+                    ${promotionResult.bestTotal.toFixed(2)}
+                  </span>
+                </div>
               </div>
               <button
                 onClick={handleCheckout}
