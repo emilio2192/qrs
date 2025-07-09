@@ -365,6 +365,48 @@ async function main() {
   } else {
     console.log('Products already exist, skipping...');
   }
+
+  // Check if users already exist
+  const existingUsers = await prisma.user.count();
+  if (existingUsers === 0) {
+    console.log('Creating test users...');
+    
+    // Import bcrypt for password hashing
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    const password = 'password123';
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
+    const users = [
+      {
+        email: 'common@example.com',
+        password: hashedPassword,
+        name: 'Common User',
+        userType: 'COMMON' as const,
+        isActive: true,
+      },
+      {
+        email: 'vip@example.com',
+        password: hashedPassword,
+        name: 'VIP User',
+        userType: 'VIP' as const,
+        isActive: true,
+      },
+    ];
+
+    for (const userData of users) {
+      const user = await prisma.user.create({
+        data: userData,
+      });
+      console.log(`Created user: ${user.name} (${user.userType})`);
+    }
+    console.log('✅ Test users created successfully');
+    console.log('📧 Login credentials:');
+    console.log('   Common user: common@example.com / password123');
+    console.log('   VIP user: vip@example.com / password123');
+  } else {
+    console.log('Users already exist, skipping...');
+  }
 }
 
 main()

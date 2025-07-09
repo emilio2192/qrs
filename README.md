@@ -302,3 +302,72 @@ The application is deployed to Vercel for production. **No Dockerfile is needed 
 ## 📄 License
 
 This project is created for the QRS Shopping Cart Challenge.
+
+## Database Setup (PostgreSQL via Docker)
+
+This project uses Docker to run PostgreSQL with persistent storage. Follow these steps to set up, reset, and seed your database:
+
+### 1. Start PostgreSQL with Docker
+
+```
+npm run docker:up
+```
+
+This will start the PostgreSQL container defined in `docker-compose.yml` and create a persistent volume (`qrs_postgres_data`).
+
+### 2. Generate Prisma Client
+
+```
+npm run db:generate
+```
+
+### 3. Push the Prisma Schema to the Database
+
+```
+npm run db:push
+```
+
+### 4. Seed the Database (Test Users & Sample Data)
+
+```
+npm run db:seed
+```
+
+This will create:
+- Sample banners, categories, and products
+- Two test users:
+  - Common user: `common@example.com` / `password123`
+  - VIP user: `vip@example.com` / `password123`
+
+### 5. Open Prisma Studio (Optional)
+
+```
+npm run db:studio
+```
+
+This opens a web UI at http://localhost:5555 to inspect and edit your database.
+
+### Resetting the Database
+
+To reset the database (wipe all data and start fresh):
+
+1. Stop the database:
+   ```
+npm run docker:down
+   ```
+2. Remove the Docker volume:
+   ```
+docker volume rm qrs_postgres_data
+   ```
+3. Start the database again:
+   ```
+npm run docker:up
+   ```
+4. Repeat steps 2-4 above (generate, push, seed).
+
+---
+
+## Notes
+- The database connection details are configured in your `.env` file.
+- Only Docker is used for PostgreSQL; all other services run locally.
+- If you change the Prisma schema, always re-run `npm run db:generate` and `npm run db:push`.
